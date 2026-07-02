@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Calmzone Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+<!-- LOGIN -->
+<div id="loginWin" class="flex h-screen items-center justify-center bg-slate-950 p-4">
+    <div class="bg-white p-8 rounded-2xl w-96 text-center shadow-2xl">
+        <h1 class="text-3xl font-black text-indigo-900 mb-2">CALMZONE</h1>
+        <p class="text-xs font-bold text-slate-400 uppercase mb-6">Logistics Portal</p>
+        <input type="password" id="pin" maxlength="4" placeholder="••••" class="w-full border-2 rounded-xl p-3 text-center text-3xl font-black tracking-widest mb-4 outline-none">
+        <button onclick="login()" class="w-full bg-indigo-600 text-white font-black p-3.5 rounded-xl">LOGIN</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="portalWin" class="hidden flex h-screen overflow-hidden">
+    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4">
+        <div>
+            <h2 class="text-xl font-black text-indigo-400 text-center py-4 border-b border-white/10">CALMZONE</h2>
+            <nav id="cNav" class="mt-6 space-y-1 hidden">
+                <button onclick="tab('book')" class="w-full text-left p-3 rounded-xl font-bold text-sm bg-indigo-600 text-white"><i class="fas fa-plus-circle mr-2"></i> Book Parcel</button>
+                <button onclick="tab('orders')" class="w-full text-left p-3 rounded-xl font-bold text-sm hover:bg-white/5"><i class="fas fa-box mr-2"></i> My Bookings</button>
+            </nav>
+            <nav id="aNav" class="mt-6 space-y-1 hidden">
+                <button onclick="tab('aClients')" class="w-full text-left p-3 rounded-xl font-bold text-sm bg-red-600 text-white"><i class="fas fa-users mr-2"></i> Client Wallets</button>
+            </nav>
+        </div>
+        <div class="border-t border-white/10 pt-4 text-center">
+            <div id="wBox" class="bg-slate-800 p-3 rounded-xl mb-3 hidden"><span class="text-[10px] text-slate-400 block">BALANCE</span><b id="bal" class="text-xl text-emerald-400">₹0</b></div>
+            <button onclick="location.reload()" class="w-full bg-red-600/80 p-2 rounded-lg text-xs font-black">LOGOUT</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8">
+        <!-- Client Book -->
+        <div id="view-book" class="pane hidden space-y-6 max-w-3xl">
+            <h2 class="text-2xl font-black">Book New Shipment</h2>
+            <div class="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-xs font-bold">Pickup</label><select id="pSel" class="w-full border p-2.5 rounded-xl mt-1"></select></div>
+                    <div><label class="text-xs font-bold">Delivery Pincode</label><input type="number" id="dPin" placeholder="400001" class="w-full border p-2.5 rounded-xl mt-1 font-bold"></div>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <input type="number" id="wt" placeholder="Wt(g)" class="border p-2.5 rounded-xl bg-amber-50 font-bold">
+                    <input type="number" id="l" placeholder="L" class="border p-2.5 rounded-xl">
+                    <input type="number" id="b" placeholder="B" class="border p-2.5 rounded-xl">
+                    <input type="number" id="h" placeholder="H" class="border p-2.5 rounded-xl">
+                </div>
+                <button onclick="checkRate()" class="w-full bg-slate-900 text-white font-black p-3.5 rounded-xl">Calculate Rates</button>
+            </div>
+
+            <div id="rateCard" class="bg-white p-6 rounded-2xl border hidden space-y-4">
+                <div id="cRows" class="space-y-2"></div>
+            </div>
+
+            <div id="formCard" class="bg-white p-6 rounded-2xl border-2 border-indigo-600 hidden space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="cN" placeholder="Name *" class="border p-3 rounded-xl">
+                    <input type="tel" id="cP" placeholder="Phone *" class="border p-3 rounded-xl">
+                    <textarea id="cA" placeholder="Full Address *" class="border p-3 rounded-xl col-span-2"></textarea>
+                    <input type="text" id="cCity" placeholder="City *" class="border p-3 rounded-xl">
+                    <input type="text" id="cState" placeholder="State *" class="border p-3 rounded-xl">
+                </div>
+                <button onclick="confirmBooking()" id="cnfBtn" class="w-full bg-emerald-600 text-white font-black p-4 rounded-xl text-lg">Pay & Book</button>
+            </div>
+        </div>
+
+        <div id="view-orders" class="pane hidden"><h2 class="text-2xl font-black mb-6">My Bookings</h2><div class="bg-white rounded-2xl border overflow-hidden"><table class="w-full text-left text-sm"><tbody id="ordTb" class="divide-y font-bold"></tbody></table></div></div>
+        
+        <div id="view-aClients" class="pane hidden"><h2 class="text-2xl font-black mb-6">Reseller Wallets</h2><div class="bg-white rounded-2xl border"><table class="w-full text-left text-sm"><tbody id="aClTb" class="divide-y font-bold"></tbody></table></div></div>
+    </main>
+</div>
+
+<script>
+let user=null, selC=null, appWt=0;
+async function login(){
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:document.getElementById('pin').value})});
+    if(r.status===200){
+        user=(await r.json()).user; document.getElementById('loginWin').classList.add('hidden'); document.getElementById('portalWin').classList.remove('hidden');
+        if(user.role==='admin'){ document.getElementById('aNav').classList.remove('hidden'); tab('aClients'); loadA(); }
+        else { document.getElementById('cNav').classList.remove('hidden'); document.getElementById('wBox').classList.remove('hidden'); tab('book'); loadC(); }
+    } else alert("Invalid PIN");
+}
+function tab(id){ document.querySelectorAll('.pane').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); if(user.role==='client') loadC(); }
+async function loadC(){
+    const d=await (await fetch('/api/client/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:user.pin})})).json();
+    document.getElementById('bal').innerText="₹"+d.balance;
+    const ps=document.getElementById('pSel'); ps.innerHTML=''; d.addresses.forEach(a=>ps.innerHTML+=`<option value="${a.id}">${a.alias}</option>`);
+    const ot=document.getElementById('ordTb'); ot.innerHTML=''; d.shipments.forEach(s=>{ ot.innerHTML+=`<tr><td class="p-4"><b class="text-indigo-600">${s.awb}</b></td><td class="p-4">${s.c_name}</td><td class="p-4 text-emerald-600">₹${s.charged}</td></tr>`; });
+}
+async function checkRate(){
+    const res=await (await fetch('/api/get-rates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wt:document.getElementById('wt').value,l:document.getElementById('l').value,b:document.getElementById('b').value,h:document.getElementById('h').value})})).json();
+    document.getElementById('rateCard').classList.remove('hidden'); appWt=res.weights.billed; const cr=document.getElementById('cRows'); cr.innerHTML='';
+    res.couriers.forEach(c=>cr.innerHTML+=`<div class="border p-3 rounded-xl flex justify-between bg-slate-50"><b>${c.name}</b><div><span class="text-emerald-600 font-black mr-3">₹${c.price}</span><button onclick='pickC(${JSON.stringify(c)})' class="bg-indigo-600 text-white px-3 py-1 rounded text-xs">Select</button></div></div>`);
+}
+function pickC(c){ selC=c; document.getElementById('formCard').classList.remove('hidden'); }
+async function confirmBooking(){
+    document.getElementById('cnfBtn').innerText="Booking...";
+    const cnf=await (await fetch('/api/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:user.pin,courier_name:selC.name,price:selC.price,weight:appWt,pickup_id:document.getElementById('pSel').value,consignee:{name:document.getElementById('cN').value,phone:document.getElementById('cP').value,address:document.getElementById('cA').value,city:document.getElementById('cCity').value,state:document.getElementById('cState').value,pincode:document.getElementById('dPin').value}})})).json();
+    if(cnf.status==="SUCCESS"){ alert("AWB: "+cnf.awb); tab('orders'); } else alert(cnf.msg);
+    document.getElementById('cnfBtn').innerText="Pay & Book";
+}
+async function loadA(){
+    const d=await (await fetch('/api/admin/data',{method:'POST',headers:{'Content-Type':'application/json'}})).json();
+    const tb=document.getElementById('aClTb'); tb.innerHTML=''; d.clients.forEach(c=>{ tb.innerHTML+=`<tr><td class="p-4">${c.company}</td><td class="p-4 font-black text-emerald-600">₹${c.balance}</td></tr>`; });
+}
+</script></body></html>
