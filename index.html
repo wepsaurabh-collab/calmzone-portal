@@ -1,112 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Calmzone Portal</title>
+    <meta charset="UTF-8"><title>Calmzone Aggregator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
-<!-- LOGIN -->
+<!-- LOGIN SCREEN -->
 <div id="loginWin" class="flex h-screen items-center justify-center bg-slate-950 p-4">
     <div class="bg-white p-8 rounded-2xl w-96 text-center shadow-2xl">
-        <h1 class="text-3xl font-black text-indigo-900 mb-2">CALMZONE</h1>
-        <p class="text-xs font-bold text-slate-400 uppercase mb-6">Logistics Portal</p>
-        <input type="password" id="pin" maxlength="4" placeholder="••••" class="w-full border-2 rounded-xl p-3 text-center text-3xl font-black tracking-widest mb-4 outline-none">
-        <button onclick="login()" class="w-full bg-indigo-600 text-white font-black p-3.5 rounded-xl">LOGIN</button>
+        <h1 class="text-4xl font-black text-indigo-900 mb-2 tracking-tighter">CALMZONE</h1>
+        <p class="text-xs font-bold text-slate-400 uppercase mb-8">Integrated API Portal</p>
+        <input type="password" id="pin" maxlength="4" placeholder="ENTER 4-DIGIT PIN" class="w-full border-2 rounded-xl p-4 text-center text-xl font-black tracking-widest mb-6 outline-none focus:border-indigo-600 transition-colors">
+        <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black p-4 rounded-xl shadow-lg transition-all">SECURE LOGIN</button>
     </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="portalWin" class="hidden flex h-screen overflow-hidden">
-    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between shadow-2xl z-10">
         <div>
-            <h2 class="text-xl font-black text-indigo-400 text-center py-4 border-b border-white/10">CALMZONE</h2>
-            <nav id="cNav" class="mt-6 space-y-1 hidden">
-                <button onclick="tab('book')" class="w-full text-left p-3 rounded-xl font-bold text-sm bg-indigo-600 text-white"><i class="fas fa-plus-circle mr-2"></i> Book Parcel</button>
-                <button onclick="tab('orders')" class="w-full text-left p-3 rounded-xl font-bold text-sm hover:bg-white/5"><i class="fas fa-box mr-2"></i> My Bookings</button>
+            <div class="p-6 border-b border-white/10 text-center">
+                <h2 class="text-2xl font-black text-white tracking-tighter">CALMZONE</h2>
+                <span id="roleBadge" class="text-[10px] font-bold bg-indigo-600 px-2 py-0.5 rounded-full mt-2 inline-block">Pro Aggregator</span>
+            </div>
+            
+            <nav id="cNav" class="mt-6 px-4 space-y-2 hidden">
+                <button onclick="tab('book')" class="w-full text-left p-3 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-md"><i class="fas fa-plus-circle w-6 text-center"></i> Create Booking</button>
+                <button onclick="tab('orders')" class="w-full text-left p-3 rounded-xl font-bold text-sm hover:bg-white/10 text-slate-300 transition-colors"><i class="fas fa-box w-6 text-center"></i> My Shipments</button>
+                <button onclick="tab('dues')" class="w-full text-left p-3 rounded-xl font-bold text-sm hover:bg-white/10 text-amber-400 flex justify-between transition-colors"><span><i class="fas fa-scale-balanced w-6 text-center"></i> Weight Dues</span><b id="dueCnt" class="bg-red-500 px-2 py-0.5 rounded-full text-xs text-white hidden">0</b></button>
+                <button onclick="tab('ledg')" class="w-full text-left p-3 rounded-xl font-bold text-sm hover:bg-white/10 text-slate-300 transition-colors"><i class="fas fa-wallet w-6 text-center"></i> Wallet Ledger</button>
             </nav>
-            <nav id="aNav" class="mt-6 space-y-1 hidden">
-                <button onclick="tab('aClients')" class="w-full text-left p-3 rounded-xl font-bold text-sm bg-red-600 text-white"><i class="fas fa-users mr-2"></i> Client Wallets</button>
+            
+            <nav id="aNav" class="mt-6 px-4 space-y-2 hidden">
+                <button onclick="tab('aClients')" class="w-full text-left p-3 rounded-xl font-bold text-sm bg-red-600 text-white shadow-md"><i class="fas fa-users w-6 text-center"></i> Reseller Wallets</button>
+                <button onclick="tab('aShip')" class="w-full text-left p-3 rounded-xl font-bold text-sm hover:bg-white/10 text-slate-300 transition-colors"><i class="fas fa-truck-fast w-6 text-center"></i> Platform Shipments</button>
             </nav>
         </div>
-        <div class="border-t border-white/10 pt-4 text-center">
-            <div id="wBox" class="bg-slate-800 p-3 rounded-xl mb-3 hidden"><span class="text-[10px] text-slate-400 block">BALANCE</span><b id="bal" class="text-xl text-emerald-400">₹0</b></div>
-            <button onclick="location.reload()" class="w-full bg-red-600/80 p-2 rounded-lg text-xs font-black">LOGOUT</button>
+        
+        <div class="p-4 border-t border-white/10">
+            <div id="wBox" class="bg-slate-800 p-4 rounded-xl mb-4 shadow-inner hidden">
+                <span class="text-[10px] text-slate-400 block font-bold mb-1">LIVE WALLET BALANCE</span>
+                <b id="bal" class="text-2xl text-emerald-400 font-black">₹0</b>
+            </div>
+            <button onclick="location.reload()" class="w-full border-2 border-slate-700 hover:bg-slate-800 text-slate-300 p-3 rounded-xl text-xs font-black transition-colors"><i class="fas fa-power-off mr-2"></i> LOGOUT</button>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-8">
-        <!-- Client Book -->
-        <div id="view-book" class="pane hidden space-y-6 max-w-3xl">
-            <h2 class="text-2xl font-black">Book New Shipment</h2>
-            <div class="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-xs font-bold">Pickup</label><select id="pSel" class="w-full border p-2.5 rounded-xl mt-1"></select></div>
-                    <div><label class="text-xs font-bold">Delivery Pincode</label><input type="number" id="dPin" placeholder="400001" class="w-full border p-2.5 rounded-xl mt-1 font-bold"></div>
+    <!-- Main Workspace -->
+    <main class="flex-1 overflow-y-auto bg-slate-50 p-8">
+        
+        <!-- Booking Panel -->
+        <div id="view-book" class="pane hidden space-y-6 max-w-4xl mx-auto">
+            <h2 class="text-3xl font-black text-slate-800">New API Shipment</h2>
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Pickup Location</label><select id="pSel" class="w-full border-2 p-3 rounded-xl mt-1 focus:border-indigo-500 outline-none font-medium"></select></div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Delivery Pincode</label><input type="number" id="dPin" placeholder="Enter Pincode" class="w-full border-2 p-3 rounded-xl mt-1 font-black text-indigo-900 focus:border-indigo-500 outline-none"></div>
                 </div>
-                <div class="grid grid-cols-4 gap-2">
-                    <input type="number" id="wt" placeholder="Wt(g)" class="border p-2.5 rounded-xl bg-amber-50 font-bold">
-                    <input type="number" id="l" placeholder="L" class="border p-2.5 rounded-xl">
-                    <input type="number" id="b" placeholder="B" class="border p-2.5 rounded-xl">
-                    <input type="number" id="h" placeholder="H" class="border p-2.5 rounded-xl">
+                <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Package Details (Dimensions in cm, Weight in gm)</label>
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <input type="number" id="wt" placeholder="Dead Wt (g)" class="border-2 p-3 rounded-xl bg-amber-50 focus:border-amber-500 font-bold outline-none">
+                    <input type="number" id="l" placeholder="Length" class="border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                    <input type="number" id="b" placeholder="Breadth" class="border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                    <input type="number" id="h" placeholder="Height" class="border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
                 </div>
-                <button onclick="checkRate()" class="w-full bg-slate-900 text-white font-black p-3.5 rounded-xl">Calculate Rates</button>
+                <button onclick="checkRate()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black p-4 rounded-xl shadow-lg transition-colors">FETCH LIVE API RATES</button>
             </div>
 
-            <div id="rateCard" class="bg-white p-6 rounded-2xl border hidden space-y-4">
-                <div id="cRows" class="space-y-2"></div>
+            <div id="rateCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
+                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex justify-between text-sm mb-4">
+                    <span class="font-bold text-slate-600" id="wD">Dead Wt: 0g</span>
+                    <span class="font-bold text-slate-600" id="wV">Vol Wt: 0g</span>
+                    <span class="font-black text-indigo-700 text-base" id="wB">Applicable Billed Wt: 0g</span>
+                </div>
+                <div id="cRows" class="space-y-3"></div>
             </div>
 
-            <div id="formCard" class="bg-white p-6 rounded-2xl border-2 border-indigo-600 hidden space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="cN" placeholder="Name *" class="border p-3 rounded-xl">
-                    <input type="tel" id="cP" placeholder="Phone *" class="border p-3 rounded-xl">
-                    <textarea id="cA" placeholder="Full Address *" class="border p-3 rounded-xl col-span-2"></textarea>
-                    <input type="text" id="cCity" placeholder="City *" class="border p-3 rounded-xl">
-                    <input type="text" id="cState" placeholder="State *" class="border p-3 rounded-xl">
+            <div id="formCard" class="bg-white p-8 rounded-2xl shadow-lg border-2 border-indigo-600 hidden">
+                <h3 class="font-black text-indigo-900 mb-6 text-xl border-b pb-4">Consignee Details (<span id="sCname" class="text-indigo-500"></span>)</h3>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <input type="text" id="cN" placeholder="Full Name *" class="border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                    <input type="tel" id="cP" placeholder="Mobile Number *" class="border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                    <textarea id="cA" placeholder="Complete Delivery Address *" class="border-2 p-3 rounded-xl col-span-2 outline-none focus:border-indigo-500 resize-none h-24"></textarea>
+                    <input type="text" id="cCity" placeholder="City *" class="border-2 p-3 rounded-xl outline-none focus:border-indigo-500">
+                    <select id="cState" class="border-2 p-3 rounded-xl bg-white font-medium outline-none focus:border-indigo-500">
+                        <option value="">Select Indian State *</option><option value="Delhi">Delhi</option><option value="Maharashtra">Maharashtra</option><option value="Gujarat">Gujarat</option><option value="Karnataka">Karnataka</option><option value="Uttar Pradesh">Uttar Pradesh</option><option value="Himachal Pradesh">Himachal Pradesh</option><option value="Bihar">Bihar</option>
+                    </select>
                 </div>
-                <button onclick="confirmBooking()" id="cnfBtn" class="w-full bg-emerald-600 text-white font-black p-4 rounded-xl text-lg">Pay & Book</button>
+                <button onclick="confirmBooking()" id="cnfBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black p-4 rounded-xl text-lg shadow-lg transition-colors"><i class="fas fa-lock mr-2"></i> AUTHORIZE DEDUCTION & BOOK</button>
             </div>
         </div>
 
-        <div id="view-orders" class="pane hidden"><h2 class="text-2xl font-black mb-6">My Bookings</h2><div class="bg-white rounded-2xl border overflow-hidden"><table class="w-full text-left text-sm"><tbody id="ordTb" class="divide-y font-bold"></tbody></table></div></div>
+        <!-- Orders View -->
+        <div id="view-orders" class="pane hidden max-w-6xl mx-auto">
+            <h2 class="text-3xl font-black text-slate-800 mb-6">Shipment Management</h2>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 uppercase text-[10px] text-slate-500 font-black tracking-wider">
+                        <tr><th class="p-5 border-b">AWB / Courier</th><th class="p-5 border-b">Consignee</th><th class="p-5 border-b">Weight</th><th class="p-5 border-b">Charges</th><th class="p-5 border-b text-right">Actions</th></tr>
+                    </thead>
+                    <tbody id="ordTb" class="divide-y font-medium text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dues View -->
+        <div id="view-dues" class="pane hidden max-w-4xl mx-auto">
+            <h2 class="text-3xl font-black text-red-600 mb-6">Weight Discrepancy Dues</h2>
+            <div id="dueList" class="space-y-4"></div>
+        </div>
+
+        <!-- Ledger View -->
+        <div id="view-ledg" class="pane hidden max-w-4xl mx-auto">
+            <h2 class="text-3xl font-black text-slate-800 mb-6">Wallet Ledger</h2>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 uppercase text-[10px] text-slate-500 font-black tracking-wider">
+                        <tr><th class="p-4">Timestamp</th><th class="p-4">Type</th><th class="p-4">Amount</th><th class="p-4">Description</th></tr>
+                    </thead>
+                    <tbody id="ledTb" class="divide-y font-medium text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Panes -->
+        <div id="view-aClients" class="pane hidden max-w-4xl mx-auto">
+            <h2 class="text-3xl font-black text-slate-800 mb-6">Admin HQ: Reseller Wallets</h2>
+            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 flex space-x-4 items-end mb-8 shadow-inner">
+                <div class="flex-1"><label class="text-xs font-bold text-indigo-900 uppercase">Select Aggregator Account</label><select id="aCSel" class="w-full border-2 border-white shadow-sm p-3 rounded-xl font-bold mt-2 outline-none"></select></div>
+                <div class="flex-1"><label class="text-xs font-bold text-indigo-900 uppercase">Credit Amount (₹)</label><input type="number" id="aAmt" class="w-full border-2 border-white shadow-sm p-3 rounded-xl font-black text-emerald-600 mt-2 outline-none"></div>
+                <button onclick="doRecharge()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-8 py-3.5 rounded-xl shadow-lg transition-colors">CREDIT WALLET</button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-slate-100 uppercase text-[10px] text-slate-500 font-black"><th class="p-4">Company Name</th><th class="p-4 text-right">Available Balance</th></thead><tbody id="aClTb" class="divide-y font-bold text-slate-700"></tbody></table></div>
+        </div>
         
-        <div id="view-aClients" class="pane hidden"><h2 class="text-2xl font-black mb-6">Reseller Wallets</h2><div class="bg-white rounded-2xl border"><table class="w-full text-left text-sm"><tbody id="aClTb" class="divide-y font-bold"></tbody></table></div></div>
+        <div id="view-aShip" class="pane hidden max-w-6xl mx-auto">
+            <h2 class="text-3xl font-black text-slate-800 mb-6">Global Platform Shipments</h2>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-slate-100 uppercase text-[10px] text-slate-500 font-black"><th class="p-4">Reseller</th><th class="p-4">AWB Detail</th><th class="p-4">Costing</th><th class="p-4 text-right">Audit / Penalty</th></thead><tbody id="aShTb" class="divide-y font-medium text-slate-700"></tbody></table></div>
+        </div>
     </main>
+</div>
+
+<!-- Modal Tracking -->
+<div id="tMod" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white p-8 rounded-2xl w-[450px] shadow-2xl relative">
+        <button onclick="document.getElementById('tMod').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+        <h3 class="text-xl font-black text-indigo-900 border-b pb-4 mb-6">Live API Tracking<br><span id="tTitle" class="text-sm font-medium text-slate-500"></span></h3>
+        <div id="tLines" class="space-y-6 text-sm"></div>
+    </div>
 </div>
 
 <script>
 let user=null, selC=null, appWt=0;
+
 async function login(){
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:document.getElementById('pin').value})});
+    const pinVal = document.getElementById('pin').value;
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pinVal})});
     if(r.status===200){
         user=(await r.json()).user; document.getElementById('loginWin').classList.add('hidden'); document.getElementById('portalWin').classList.remove('hidden');
-        if(user.role==='admin'){ document.getElementById('aNav').classList.remove('hidden'); tab('aClients'); loadA(); }
-        else { document.getElementById('cNav').classList.remove('hidden'); document.getElementById('wBox').classList.remove('hidden'); tab('book'); loadC(); }
-    } else alert("Invalid PIN");
+        if(user.role==='admin'){ document.getElementById('aNav').classList.remove('hidden'); document.getElementById('roleBadge').innerText="Super Admin HQ"; tab('aClients'); loadA(); }
+        else { document.getElementById('cNav').classList.remove('hidden'); document.getElementById('wBox').classList.remove('hidden'); document.getElementById('roleBadge').innerText=user.company; tab('book'); loadC(); }
+    } else alert("Authentication Failed. Invalid PIN.");
 }
+
 function tab(id){ document.querySelectorAll('.pane').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden'); if(user.role==='client') loadC(); }
+
 async function loadC(){
     const d=await (await fetch('/api/client/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:user.pin})})).json();
-    document.getElementById('bal').innerText="₹"+d.balance;
-    const ps=document.getElementById('pSel'); ps.innerHTML=''; d.addresses.forEach(a=>ps.innerHTML+=`<option value="${a.id}">${a.alias}</option>`);
-    const ot=document.getElementById('ordTb'); ot.innerHTML=''; d.shipments.forEach(s=>{ ot.innerHTML+=`<tr><td class="p-4"><b class="text-indigo-600">${s.awb}</b></td><td class="p-4">${s.c_name}</td><td class="p-4 text-emerald-600">₹${s.charged}</td></tr>`; });
+    user.balance=d.balance; document.getElementById('bal').innerText="₹"+d.balance;
+    const ps=document.getElementById('pSel'); ps.innerHTML=''; d.addresses.forEach(a=>ps.innerHTML+=`<option value="${a.id}">${a.alias} - ${a.pin}</option>`);
+    
+    const ot=document.getElementById('ordTb'); ot.innerHTML=''; const dl=document.getElementById('dueList'); dl.innerHTML=''; let dCnt=0;
+    d.shipments.forEach(s=>{
+        ot.innerHTML+=`<tr><td class="p-5"><b class="text-indigo-700 text-base block">${s.awb}</b><span class="text-[11px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded">${s.courier}</span></td><td class="p-5 text-sm">${s.c_name}<br><span class="text-xs text-slate-400">${s.c_city}, ${s.c_state}</span></td><td class="p-5">${s.weight}g</td><td class="p-5 font-black text-emerald-600 text-base">₹${s.charged}</td><td class="p-5 text-right"><button onclick="trackOrder('${s.awb}')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 mr-2 rounded-lg text-xs font-bold transition-colors"><i class="fas fa-satellite-dish mr-1"></i> Track</button><a href="${s.label_url}" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"><i class="fas fa-file-pdf mr-1"></i> Label</a></td></tr>`;
+        if(s.disc_status==='RAISED'){ dCnt++; dl.innerHTML+=`<div class="bg-white p-5 border-l-4 border-red-500 shadow-sm rounded-xl flex justify-between items-center"><div class="flex items-center"><i class="fas fa-triangle-exclamation text-red-500 text-2xl mr-4"></i><div><b class="text-slate-800 block text-lg">${s.awb}</b><p class="text-sm font-bold text-slate-500">Weight Audit Penalty: <span class="text-red-600">₹${s.disc_amt}</span></p></div></div><button onclick="payDue('${s.awb}')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-lg transition-colors">AUTHORIZE PAYMENT</button></div>`; }
+    });
+    const dbg=document.getElementById('dueCnt'); if(dCnt>0){ dbg.innerText=dCnt; dbg.classList.remove('hidden'); } else dbg.classList.add('hidden');
+    
+    const lt=document.getElementById('ledTb'); lt.innerHTML=''; d.ledger.forEach(l=>lt.innerHTML+=`<tr><td class="p-4 text-xs font-bold text-slate-400">${l.date}</td><td class="p-4 font-black ${l.type==='RECHARGE'?'text-emerald-600':'text-red-500'}">${l.type}</td><td class="p-4 text-lg font-black ${l.type==='RECHARGE'?'text-emerald-600':'text-slate-700'}">₹${l.amount}</td><td class="p-4 text-xs font-bold text-slate-500">${l.desc}</td></tr>`);
 }
+
 async function checkRate(){
     const res=await (await fetch('/api/get-rates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wt:document.getElementById('wt').value,l:document.getElementById('l').value,b:document.getElementById('b').value,h:document.getElementById('h').value})})).json();
-    document.getElementById('rateCard').classList.remove('hidden'); appWt=res.weights.billed; const cr=document.getElementById('cRows'); cr.innerHTML='';
-    res.couriers.forEach(c=>cr.innerHTML+=`<div class="border p-3 rounded-xl flex justify-between bg-slate-50"><b>${c.name}</b><div><span class="text-emerald-600 font-black mr-3">₹${c.price}</span><button onclick='pickC(${JSON.stringify(c)})' class="bg-indigo-600 text-white px-3 py-1 rounded text-xs">Select</button></div></div>`);
+    document.getElementById('rateCard').classList.remove('hidden'); document.getElementById('wD').innerText="Dead: "+res.weights.dead+"g"; document.getElementById('wV').innerText="Vol: "+res.weights.vol+"g"; document.getElementById('wB').innerText="Billed: "+res.weights.billed+"g"; appWt=res.weights.billed;
+    const cr=document.getElementById('cRows'); cr.innerHTML=''; res.couriers.forEach(c=>cr.innerHTML+=`<div class="border border-slate-200 p-4 rounded-xl flex items-center justify-between bg-white hover:border-indigo-300 transition-colors"><div class="flex items-center"><div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mr-4"><i class="fas fa-truck-fast"></i></div><div><b class="block text-slate-800">${c.name}</b><span class="text-xs font-bold text-slate-400">Est. Delivery: ${c.days}</span></div></div><div class="text-right flex items-center"><span class="text-emerald-600 font-black text-xl mr-6">₹${c.price}</span><button onclick='pickC(${JSON.stringify(c)})' class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-lg text-sm transition-colors">Select Partner</button></div></div>`);
 }
-function pickC(c){ selC=c; document.getElementById('formCard').classList.remove('hidden'); }
+
+function pickC(c){ selC=c; document.getElementById('sCname').innerText=c.name; document.getElementById('formCard').classList.remove('hidden'); }
+
 async function confirmBooking(){
-    document.getElementById('cnfBtn').innerText="Booking...";
+    if(!document.getElementById('cState').value) return alert("Please select a state.");
+    document.getElementById('cnfBtn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> PUSHING TO API...';
     const cnf=await (await fetch('/api/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:user.pin,courier_name:selC.name,price:selC.price,weight:appWt,pickup_id:document.getElementById('pSel').value,consignee:{name:document.getElementById('cN').value,phone:document.getElementById('cP').value,address:document.getElementById('cA').value,city:document.getElementById('cCity').value,state:document.getElementById('cState').value,pincode:document.getElementById('dPin').value}})})).json();
-    if(cnf.status==="SUCCESS"){ alert("AWB: "+cnf.awb); tab('orders'); } else alert(cnf.msg);
-    document.getElementById('cnfBtn').innerText="Pay & Book";
+    if(cnf.status==="SUCCESS"){ alert("SUCCESS! Generated API AWB: "+cnf.awb); window.open(cnf.url); tab('orders'); } else alert(cnf.msg);
+    document.getElementById('cnfBtn').innerHTML = '<i class="fas fa-lock mr-2"></i> AUTHORIZE DEDUCTION & BOOK';
 }
+
+async function trackOrder(awb){
+    const d=await (await fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({awb})})).json();
+    document.getElementById('tTitle').innerText = awb + " | " + d.data.courier; const tl=document.getElementById('tLines'); tl.innerHTML='';
+    d.data.timeline.forEach(t=>tl.innerHTML+=`<div class="relative pl-6 border-l-2 border-indigo-200 before:absolute before:w-3 before:h-3 before:bg-indigo-600 before:rounded-full before:-left-[7px] before:top-1.5"><b class="text-slate-800 block">${t.title}</b><p class="text-xs font-bold text-slate-500 mt-1"><i class="far fa-clock mr-1"></i> ${t.time} • <i class="fas fa-location-dot ml-2 mr-1"></i> ${t.location}</p></div>`);
+    document.getElementById('tMod').classList.remove('hidden');
+}
+
+async function payDue(awb){ await fetch('/api/pay-due',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:user.pin,awb})}); loadC(); }
+
 async function loadA(){
     const d=await (await fetch('/api/admin/data',{method:'POST',headers:{'Content-Type':'application/json'}})).json();
-    const tb=document.getElementById('aClTb'); tb.innerHTML=''; d.clients.forEach(c=>{ tb.innerHTML+=`<tr><td class="p-4">${c.company}</td><td class="p-4 font-black text-emerald-600">₹${c.balance}</td></tr>`; });
+    const tb=document.getElementById('aClTb'); tb.innerHTML=''; const cs=document.getElementById('aCSel'); cs.innerHTML='';
+    d.clients.forEach(c=>{ tb.innerHTML+=`<tr><td class="p-4 font-bold text-slate-700">${c.company} <br><span class="text-xs text-slate-400 font-normal">Contact: ${c.person}</span></td><td class="p-4 text-right font-black text-emerald-600 text-lg">₹${c.balance}</td></tr>`; cs.innerHTML+=`<option value="${c.id}">${c.company}</option>`; });
+    const st=document.getElementById('aShTb'); st.innerHTML='';
+    d.shipments.forEach(s=>st.innerHTML+=`<tr><td class="p-4 text-xs font-bold text-slate-500 uppercase">${s.company}</td><td class="p-4"><b class="text-indigo-700 block">${s.awb}</b><span class="text-xs text-slate-400">${s.courier}</span></td><td class="p-4 font-black text-emerald-600">₹${s.charged}</td><td class="p-4 text-right">${s.disc_status==='NONE'?`<button onclick="flag('${s.awb}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-black border border-red-200 transition-colors">Raise Penalty</button>`:`<span class="text-xs font-black px-2 py-1 rounded bg-slate-100 text-slate-500">${s.disc_status}</span>`}</td></tr>`);
 }
-</script></body></html>
+
+async function doRecharge(){ await fetch('/api/admin/recharge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:document.getElementById('aCSel').value,amt:document.getElementById('aAmt').value})}); alert("Wallet Credited!"); loadA(); }
+async function flag(awb){ const amt=prompt("Enter penalty amount (₹) for weight mismatch:","50"); if(amt) await fetch('/api/admin/flag-due',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({awb,amt})}); loadA(); }
+</script>
+</body>
+</html>
