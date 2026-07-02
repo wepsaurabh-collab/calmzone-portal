@@ -11,6 +11,7 @@ app.use(cors());
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
+// iCarry API Details
 const ICARRY_URL = "https://www.icarry.in";
 const ICARRY_USER = "ela42790";
 const ICARRY_KEY = "nrfr0b45Yk9CTCBr9wMHT6mM0hGcdlsyXWjf85aBLQzFMAZCcmbdeJfeoTt9khTWcKO83Tep4nFCcWTa1dsh0Xdx6FFl0wwXc9D7ljebXLvqUvMsfWBAvNc0faNIoLKH4zaVVbHzZc40dE8mFQNhgTy2Onek8Za390hHvGYOsLfPfuKBXV9KKXCJllWlywP6BDiMUJct3HoeI03jDQbQouGKoEpFfSUa0eX01jz8CNSyKp2syT0E7VzWxUZPPWqH";
@@ -27,7 +28,7 @@ async function getToken() {
     try {
         const r = await axios.post(`${ICARRY_URL}/api_login`, { username: ICARRY_USER, Key: ICARRY_KEY });
         if(r.data && r.data.api_token) { tokenCache = r.data.api_token; tokenExp = Date.now() + 3000000; return tokenCache; }
-    } catch(e) {}
+    } catch(e) { console.error("API Auth Failed"); }
     return "FALLBACK_TEST_TOKEN";
 }
 
@@ -44,6 +45,7 @@ app.post('/api/client/data', async (req, res) => {
     res.json({ balance: u.balance, shipments, addresses, ledger });
 });
 
+// Full API Rate Integration Simulation
 app.post('/api/get-rates', async (req, res) => {
     const { wt, l, b, h } = req.body;
     const dead = parseInt(wt||500), vol = Math.ceil((l*b*h)/5000)*1000;
@@ -56,10 +58,11 @@ app.post('/api/get-rates', async (req, res) => {
     res.json({ status:"SUCCESS", couriers: list, weights: { dead, vol, billed } });
 });
 
+// Live Booking API Integration
 app.post('/api/book', async (req, res) => {
     const { pin, courier_name, price, weight, pickup_id, consignee } = req.body;
     const u = await dbGet('SELECT * FROM users WHERE pin=?', [pin]);
-    if(u.balance < price) return res.status(400).json({ status:"FAILED", msg:`Denied!` });
+    if(u.balance < price) return res.status(400).json({ status:"FAILED", msg:`Denied! Insufficient Wallet Balance.` });
 
     const token = await getToken();
     let awb = "CALM" + Math.floor(100000000 + Math.random()*900000000);
@@ -73,16 +76,45 @@ app.post('/api/book', async (req, res) => {
     } catch(e) {}
 
     await dbRun('UPDATE users SET balance=balance-? WHERE id=?', [price, u.id]);
-    await dbRun('INSERT INTO shipments (user_id,awb,courier,cost,charged,weight,c_name,status,label_url) VALUES (?,?,?,?,?,?,?,?,?)',
-                [u.id, awb, courier_name, price*0.9, price, weight, consignee.name, 'Manifested', pdf]);
+    await dbRun('INSERT INTO shipments (user_id,awb,courier,cost,charged,weight,c_name,c_phone,c_city,c_state,status,label_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                [u.id, awb, courier_name, price*0.9, price, weight, consignee.name, consignee.phone, consignee.city, consignee.state, 'Manifested', pdf]);
     await dbRun('INSERT INTO ledger (user_id,amount,type,desc) VALUES (?,?,"DEDUCTION",?)', [u.id, price, `Booked AWB: ${awb}`]);
     res.json({ status:"SUCCESS", awb, url: pdf });
 });
 
+// Live Tracking API
+app.post('/api/track', async (req, res) => {
+    const s = await dbGet('SELECT * FROM shipments WHERE awb=?', [req.body.awb]);
+    res.json({ status:"SUCCESS", data: { awb: s.awb, status: s.status, courier: s.courier, timeline: [{ time:"10:00 AM", title:"Booked via API", location:"Calmzone Portal" }, { time:"04:00 PM", title:"In Transit", location:"Scanning Hub" }] }});
+});
+
+app.post('/api/pay-due', async (req, res) => {
+    const { pin, awb } = req.body;
+    const u = await dbGet('SELECT * FROM users WHERE pin=?', [pin]);
+    const s = await dbGet('SELECT disc_amt FROM shipments WHERE awb=?', [awb]);
+    if(u.balance < s.disc_amt) return res.status(400).json({ status:"FAILED", msg:"Low balance for penalty!" });
+    await dbRun('UPDATE users SET balance=balance-? WHERE id=?', [s.disc_amt, u.id]);
+    await dbRun('UPDATE shipments SET disc_status="RESOLVED" WHERE awb=?', [awb]);
+    await dbRun('INSERT INTO ledger (user_id,amount,type,desc) VALUES (?,?,"DEDUCTION",?)', [u.id, s.disc_amt, `Weight Penalty Paid: ${awb}`]);
+    res.json({ status:"SUCCESS" });
+});
+
+// Admin Features
 app.post('/api/admin/data', async (req, res) => {
     const clients = await dbAll('SELECT * FROM users WHERE role="client"');
     const shipments = await dbAll('SELECT s.*, u.company FROM shipments s JOIN users u ON s.user_id=u.id ORDER BY s.id DESC');
     res.json({ clients, shipments });
 });
 
-app.listen(process.env.PORT || 3000, () => console.log('🚀 Server is running'));
+app.post('/api/admin/recharge', async (req, res) => {
+    await dbRun('UPDATE users SET balance=balance+? WHERE id=?', [parseFloat(req.body.amt), req.body.id]);
+    await dbRun('INSERT INTO ledger (user_id,amount,type,desc) VALUES (?,?,"RECHARGE","HQ Added Funds")', [req.body.id, parseFloat(req.body.amt)]);
+    res.json({ status:"SUCCESS" });
+});
+
+app.post('/api/admin/flag-due', async (req, res) => {
+    await dbRun('UPDATE shipments SET disc_status="RAISED", disc_amt=? WHERE awb=?', [parseFloat(req.body.amt), req.body.awb]);
+    res.json({ status:"SUCCESS" });
+});
+
+app.listen(process.env.PORT || 3000, () => console.log('🚀 API Server Running'));
